@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title>SPT Login</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/style.css') }}">
+  <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
+</head>
+
+<body>
+    <h1>Stock Portfolio Tracker</h1>
+    <form id="login_form" action="" method="post">
+        <label for="email">Email</label>
+        <div class="field">
+            <input type="email" name="email">
+        </div>
+        <label for="password">Password</label>
+        <div class="field">
+            <input type="password" name="password">
+        </div>
+        <input type="submit" name="submit" value="Log In">
+    </form>
+    <div class="bottomstuff">
+        <span><a href="">Sign up for an account here!</a></span>
+        <span>ECE 4564 Final Project by Team 8<br />Fairuz Ahmed, Nolan Pletcher, Aziz Shaik</span>
+    </div>
+</body>
+
+</html>

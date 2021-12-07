@@ -1,14 +1,14 @@
 <html>
 <head>
-  <title>SPT Login</title>
+  <title>Account Creation</title>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/login_style.css') }}">
   <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
 </head>
 
 <body>
     <h1>Stock Portfolio Tracker</h1>
-    <h4>Log into your account or create a new one</h4>
-    <form id="login_form" action="" method="POST">
+    <h4>Create an account to get started</h4>
+    <form id="create_acc_form" action="" method="POST">
         <label for="email">Email</label>
         <div class="field">
             <input type="email" name="email">
@@ -17,10 +17,11 @@
         <div class="field">
             <input type="password" name="password">
         </div>
-        <input type="submit" name="submit" value="Log In">
+        
+        <input type="submit" name="submit" value="Continue">
     </form>
     <div class="bottomstuff">
-        <span><a href="">Sign up for an account here!</a></span>
+        <span><a href="">Return to log in.</a></span>
         <span>ECE 4564 Final Project by Team 8<br />Fairuz Ahmed, Nolan Pletcher, Aziz Shaik</span>
     </div>
 </body>

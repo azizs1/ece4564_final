@@ -6,7 +6,7 @@ from pymongo import MongoClient
 import requests
 from zeroconf import ServiceBrowser, Zeroconf
 import threading
-# from servicesKeys import *
+from serviceKeys import *
 
 # Create a Flask object named app
 app = Flask(__name__)
@@ -109,13 +109,22 @@ LEDcolors = []
 
 #     return r.text
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'GET'])
 def login_page():
     message = ''
     email = request.form.get('email')  # access the data inside 
     password = request.form.get('password')
     print(email,password)
     return render_template("login.html", message=message)
+
+@app.route('/create_acc', methods=['POST', 'GET'])
+def create_acc_page():
+    # message = ''
+    # email = request.form.get('email')  # access the data inside 
+    # password = request.form.get('password')
+    # print(email,password)
+    return render_template("create_acc.html")
+    # return render_template("login.html", message=message)
 
 # Run the application when service is started
 if __name__ == '__main__':

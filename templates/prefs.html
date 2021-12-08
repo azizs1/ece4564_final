@@ -1,0 +1,89 @@
+<html>
+  <script>
+    function genFields() {
+      var x = document.getElementById("stock_num_form");
+      var num_str = x.elements[0].value;
+      var num = 0;
+      if (num_str == "") {num = 1;} else {num = parseInt(num_str)}
+      console.log(num)
+
+      document.getElementById("stock_form_div").innerHTML = "";
+      var form_div = document.querySelector('#stock_form_div');
+
+      var form = document.createElement("form");
+      form.setAttribute("method", "POST");
+      form.setAttribute("id", "stock_form");
+      form_div.appendChild(form);
+      
+      for (var i = 0; i < num; i++) {
+        var ticker_field = document.createElement("input");
+        // var price_field = document.createElement("input");
+        var quant_field = document.createElement("input");
+        var stk_div = document.createElement("div");
+        stk_div.className = 'row';
+        form.appendChild(stk_div);
+
+        ticker_field.setAttribute("type", "text");
+        ticker_field.className = 'stocks';
+        ticker_field.setAttribute("name", "ticker"+i);
+        ticker_field.setAttribute("placeholder", "Ticker");
+        stk_div.appendChild(ticker_field);
+
+        // price_field.setAttribute("type", "text");
+        // price_field.className = 'stocks';
+        // price_field.setAttribute("name", "price"+i);
+        // price_field.setAttribute("placeholder", "Price");
+
+        quant_field.setAttribute("type", "text");
+        quant_field.className = 'stocks';
+        quant_field.setAttribute("name", "quant"+i);
+        quant_field.setAttribute("placeholder", "Quantity");
+        stk_div.appendChild(quant_field);
+      }
+      
+      var form_submit = document.createElement("input");
+      form_submit.type = "submit";
+      form_submit.name = "Submit";
+      form_submit.value = "Continue";
+      form.appendChild(form_submit);
+    }
+  </script>
+  <head>
+    <title>Account Creation</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/prefs_style.css') }}">
+    <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
+  </head>
+
+  <body>
+      <h1>Stock Portfolio Tracker</h1>
+      <h4 id="d">Enter in company information and settings</h4>
+      <label>Digest Frequency</label>
+      <label class="container">Weekly
+        <input type="radio" id="weekly" checked="true" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container">Daily
+        <input type="radio" id="daily" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container">Hourly
+        <input type="radio" id="hourly" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container">None
+        <input type="radio" id="none" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <form id="stock_num_form" action="" method="POST">
+          <label>Number of Companies</label>
+          <div class="field margin-center">
+              <input type="number" name="stock_num">
+          </div>
+      </form>
+      <button onclick="genFields()">Generate Fields</button>
+      <div id="stock_form_div"></div>
+      <div class="bottomstuff">
+          <span>ECE 4564 Final Project by Team 8<br />Fairuz Ahmed, Nolan Pletcher, Aziz Shaik</span>
+      </div>
+  </body>
+</html>

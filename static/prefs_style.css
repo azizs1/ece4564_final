@@ -1,0 +1,130 @@
+* {
+  padding: 0;
+  margin: 0;
+  color: #000000;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Ubuntu,sans-serif;
+}
+body {
+  min-height: 100%;
+  background-color: #ffffff;
+}
+h1 {
+  letter-spacing: -1px;
+  color: #861F41;
+  text-align: center;
+  padding:100px 5px 30px;
+}
+
+h4 {
+  letter-spacing: -1px;
+  color: #e87722;
+  text-align: center;
+  padding:0px 5px 20px;
+}
+
+a {
+  color: #861F41;
+  text-decoration: unset;
+}
+
+span {
+  display: block;
+  font-size: 20px;
+  line-height: 28px;
+  color: #000000;
+}
+
+label {
+  color: #861F41;
+  margin-bottom: 0px;
+  margin: auto;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  text-align: center;
+  margin-bottom: 10px;
+  margin-top: 15px;
+}
+
+.field input, .stocks {
+  font-size: 16px;
+  line-height: 20px;
+  padding: 10px 20px 15px 20px;
+  width: 10%;
+  min-height: 40px;
+  border: unset;
+  border-radius: 90px;
+  outline-color: rgb(232, 119, 34);
+  
+  /* align-items: center;
+  margin: auto; */
+  margin-top: 15px;
+  margin-right: 10px;
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0 0 1px 1px rgb(232, 119, 34);
+  display: block;
+  flex-direction: row;
+  /* grid-template-columns: repeat(3, 1fr); */
+  /* grid-template-columns: 50% 50%; */
+}
+
+.row {
+  display: flex;
+  align-content: center;
+  /* align-items: center; */
+  justify-content: center;
+  /* flex-direction: row; */
+  /* align-content: flex-start; */
+  
+  /* flex-wrap: wrap; */
+  /* width: 200px;
+  height: 200px; */
+}
+
+.container {
+  letter-spacing: -1px;
+  color: #e87722;
+  text-align: center;
+  padding:0px;
+}
+
+.margin-center input {
+  margin: auto;
+}
+
+input[type="submit"], button {
+  background-color: rgb(232, 119, 34);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0;
+
+  font-size: 16px;
+  line-height: 20px;
+  padding: 5px 10px 7px 10px;
+  width: 11%;
+  min-height: 40px;
+  border: unset;
+  border-radius: 90px;
+  outline-color: rgb(103, 185, 27);
+  display: grid;
+  /* grid-template-columns: 50% 50%; */
+  align-items: center;
+  text-align: center;
+  margin: auto;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+.bottomstuff span {
+  font-size: 14px;
+  text-align: center;
+  padding-top: 24px;
+}
+
+/* .stocks {
+  
+} */

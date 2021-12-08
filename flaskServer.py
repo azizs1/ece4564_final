@@ -7,6 +7,7 @@ import requests
 from zeroconf import ServiceBrowser, Zeroconf
 import threading
 from serviceKeys import *
+import yagmail
 
 # Create a Flask object named app
 app = Flask(__name__)
@@ -22,6 +23,9 @@ col = db.service_auth
 
 # Create a HTTP Basic Authentication object named auth
 auth = HTTPBasicAuth()
+
+# Authenticate to email account for sending
+yag = yagmail.SMTP('ece4564final@gmail.com', 'FinalProject!64')
 
 # Initialize variables for data from LED Pi
 LEDip = ''
@@ -72,6 +76,11 @@ LEDcolors = []
 # t = threading.Thread(target=runZeroconf)
 # t.daemon = True
 # t.start()
+
+# Function for sending an email to the user
+# contents should be a list []
+def send_email(address, subject, contents):
+    yag.send(address, subject, contents)
 
 # Callback function that verifies credentials by searching for them on the database
 # @auth.verify_password

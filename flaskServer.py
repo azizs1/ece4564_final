@@ -115,15 +115,39 @@ def login_page():
     email = request.form.get('email')  # access the data inside 
     password = request.form.get('password')
     print(email,password)
+    
+    #implement some authentication with the db and if not match,
+    #message="Invalid credentials"
+    #if match go to dashboard
     return render_template("login.html", message=message)
+
+new_acc = False
 
 @app.route('/create_acc', methods=['POST', 'GET'])
 def create_acc_page():
+
+    # if submit is pressed and account does not exist, 
+    # set new_acc to true which is set to false when dashboard is accessed
+
+
     # message = ''
     # email = request.form.get('email')  # access the data inside 
     # password = request.form.get('password')
     # print(email,password)
+
+    #if email matches an existing account, 
+    #message="Email already in use"
+    #if not continue to prefs
     return render_template("create_acc.html")
+    # return render_template("login.html", message=message)
+
+@app.route('/prefs', methods=['POST', 'GET'])
+def prefs_page():
+    # message = ''
+    # email = request.form.get('email')  # access the data inside 
+    # password = request.form.get('password')
+    # print(email,password)
+    return render_template("prefs.html")
     # return render_template("login.html", message=message)
 
 # Run the application when service is started

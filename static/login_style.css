@@ -19,7 +19,7 @@ h1 {
 
 h4 {
   letter-spacing: -1px;
-  color: #861F41;
+  color: #e87722;
   text-align: center;
   padding:0px 5px 20px;
 }
@@ -37,6 +37,7 @@ span {
 }
 
 label {
+  color: #861F41;
   margin-bottom: 0px;
   margin: auto;
   display: inline-block;

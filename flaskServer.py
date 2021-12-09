@@ -25,6 +25,9 @@ client = MongoClient('localhost', 27017)
 db = client.ECE4564_FinalProject
 
 # Set the collection to the credentials collection
+stock_coll = db.stock_portfolios
+
+# Set the collection to the credentials collection
 credentials = db.service_auth
 
 # Create a HTTP Basic Authentication object named auth
@@ -266,12 +269,20 @@ def prefs_page():
     if not session.get("email"):
         return redirect(url_for('login_page'))
 
-    # message = ''
-    # email = request.form.get('email')  # access the data inside 
-    # password = request.form.get('password')
-    # print(email,password)
+    if request.method == 'POST':
+        stocks = []
+        for i,(k,v) in enumerate(request.form.items()):
+            if k != "Submit" and k != "hidden_field":
+                if i%2 == 1:
+                    stocks.append([v])
+                else:
+                    stocks[len(stocks)-1].append(v)
+        digest_pref = request.form['hidden_field']
+        print(digest_pref)
+        print(stocks)
+        #store in db here
+        return redirect(url_for('dash_page'))
     return render_template("prefs.html")
-    # return render_template("login.html", message=message)
 
 @app.route('/dash', methods=['GET'])
 def dash_page():

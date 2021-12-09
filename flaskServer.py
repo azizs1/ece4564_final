@@ -56,7 +56,7 @@ LEDcolors = []
 #             print("Zeroconf: Service %s added, service info: %s" % (name, info))
 
 #             # Grab IP address and port from ServiceInfo object
-#             LEDip = socket.inet_ntoa(info.addresses[0])
+#             LEDip = socket.inet_ntoa(info.address)
 #             print("Zeroconf: IP address found: " + LEDip)
 #             LEDport = info.port
 #             print("Zeroconf: Port found: " + str(LEDport))

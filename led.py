@@ -28,12 +28,12 @@ zc = Zeroconf()
 desc = {'Colors': ['red', 'green']}
 
 hostname = socket.gethostname()
-local_ip = socket.gethostbyname(hostname)
+local_ip = socket.gethostbyname(hostname + ".local.")
 
 # Initialize ServiceInfo for zeroconf service
 zcInfo = ServiceInfo("_http._tcp.local.",
                     "led rpi._http._tcp.local.",
-                    addresses=[socket.inet_aton(local_ip)],
+                    address=socket.inet_aton(local_ip),
                     port=5000,
                     properties=desc, 
                     server="rpi1.local.",

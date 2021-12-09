@@ -1,10 +1,18 @@
 <html>
   <script>
+    function getRadio() {
+      var opts = document.getElementsByName('radio');
+      for(i = 0; i < opts.length; i++) {
+        if(opts[i].checked) {return opts[i].value;}
+      }
+      return "none"
+    }
+
     function genFields() {
       var x = document.getElementById("stock_num_form");
       var num_str = x.elements[0].value;
       var num = 0;
-      if (num_str == "") {num = 1;} else {num = parseInt(num_str)}
+      if (num_str == "") {num = 0;} else {num = parseInt(num_str)}
       console.log(num)
 
       document.getElementById("stock_form_div").innerHTML = "";
@@ -15,6 +23,13 @@
       form.setAttribute("id", "stock_form");
       form_div.appendChild(form);
       
+      var digest_field = document.createElement("input");
+      digest_field.setAttribute("id", "hidden_field");
+      digest_field.setAttribute("name", "hidden_field");
+      digest_field.setAttribute("type", "hidden");
+      digest_field.setAttribute("value", getRadio())
+      form.appendChild(digest_field);
+
       for (var i = 0; i < num; i++) {
         var ticker_field = document.createElement("input");
         // var price_field = document.createElement("input");
@@ -55,23 +70,27 @@
   </head>
 
   <body>
-      <h1>Stock Portfolio Tracker</h1>
+      <!-- <h1>Stock Portfolio Tracker</h1> -->
+      <div>
+        <h1>Stock Portfolio Tracker</h1>
+        <button onclick="location.href='/dash';" style="margin-top: 10px;">Dashboard</button>
+      </div>
       <h4 id="d">Enter in company information and settings</h4>
       <label>Digest Frequency</label>
       <label class="container">Weekly
-        <input type="radio" id="weekly" checked="true" name="radio">
+        <input type="radio" id="weekly" value="weekly" checked="true" name="radio">
         <span class="checkmark"></span>
       </label>
       <label class="container">Daily
-        <input type="radio" id="daily" name="radio">
+        <input type="radio" id="daily" value="daily" checked="false" name="radio">
         <span class="checkmark"></span>
       </label>
       <label class="container">Hourly
-        <input type="radio" id="hourly" name="radio">
+        <input type="radio" id="hourly" value="hourly" checked="false" name="radio">
         <span class="checkmark"></span>
       </label>
       <label class="container">None
-        <input type="radio" id="none" name="radio">
+        <input type="radio" id="none" value="none" checked="false" name="radio">
         <span class="checkmark"></span>
       </label>
       <form id="stock_num_form" action="" method="POST">

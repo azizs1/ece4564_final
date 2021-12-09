@@ -14,14 +14,14 @@ h1 {
   letter-spacing: -1px;
   color: #861F41;
   text-align: center;
-  padding:100px 5px 30px;
+  padding:100px 5px 0px;
 }
 
 h4 {
   letter-spacing: -1px;
   color: #e87722;
   text-align: center;
-  padding:0px 5px 20px;
+  padding:20px 5px 20px;
 }
 
 a {
@@ -124,7 +124,3 @@ input[type="submit"], button {
   text-align: center;
   padding-top: 24px;
 }
-
-/* .stocks {
-  
-} */

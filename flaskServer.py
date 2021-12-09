@@ -151,20 +151,15 @@ def login_page(message):
     # If a user is already in a session then this page will be inaccessible
     if session.get("email"):
         return redirect(url_for('dashboard'))
-
-    if request.method == 'GET':
-        message = " "
-        return render_template("login.html", message=message)
-
-    else:
-        form = epForm()
+    
+    form = epForm()
+    if request.method == 'POST':
         if form.is_submitted():
             email = form.email.data
             password = form.password.data
 
-            # Check credentials with the database
             user_found = credentials.find_one(({'user': email, 'password': password}))
-
+            
             # if matched go to the user's dashboard
             if user_found:
                 session["email"] = email    # Create the user's session
@@ -173,8 +168,9 @@ def login_page(message):
             # If not matched, reload the page with an Invalid credentials message
             else:
                 message = 'Invalid Credentials'
-                return render_template("login.html", message=message)
+                return redirect(url_for('login_page', message=message))
 
+    return render_template("login.html", message=message, form=form)
 
 new_acc = False
 

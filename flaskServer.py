@@ -1,5 +1,8 @@
 from flask import Flask, url_for, render_template, request, redirect, session
 from flask import request
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, EmailField
+from wtforms.validators import DataRequired
 import socket
 from flask_httpauth import HTTPBasicAuth
 from pymongo import MongoClient
@@ -121,6 +124,11 @@ def send_email(address, subject, contents):
 
 #     return r.text
 
+# This class specifies the structure for a standard login or account creation page
+class epForm(FlaskForm):
+    email = EmailField('email', validators=[DataRequired()])
+    password = PasswordField('password', validators=[DataRequired()])
+
 # This is the default app route, it checks for a user session and determines whether or not to go to the login page or
 # to go to the user's dashboard
 @app.route('/', methods=['POST', 'GET'])
@@ -133,34 +141,39 @@ def home():
     else:
         return redirect(url_for('dashboard'))
 
+@app.route('/login', methods=['POST', 'GET'])
+def login_redir():
+    return redirect(url_for('login_page', message=" "))
 
 # This is the login app route, it displays a login page with forms to fill out the user's email and password
-@app.route('/login', methods=['POST', 'GET'])
-def login_page():
+@app.route('/login/<message>', methods=['POST', 'GET'])
+def login_page(message):
     # If a user is already in a session then this page will be inaccessible
     if session.get("email"):
         return redirect(url_for('dashboard'))
 
     if request.method == 'GET':
-        message = ''
+        message = " "
         return render_template("login.html", message=message)
 
     else:
-        email = request.form.get('email')  # access the data inside
-        password = request.form.get('password')
+        form = epForm()
+        if form.is_submitted():
+            email = form.email.data
+            password = form.password.data
 
-        # Check credentials with the database
-        user_found = credentials.find_one(({'user': email, 'password': password}))
+            # Check credentials with the database
+            user_found = credentials.find_one(({'user': email, 'password': password}))
 
-        # if matched go to the user's dashboard
-        if user_found:
-            session["email"] = email    # Create the user's session
-            return redirect(url_for('dashboard'))
+            # if matched go to the user's dashboard
+            if user_found:
+                session["email"] = email    # Create the user's session
+                return redirect(url_for('dashboard'))
 
-        # If not matched, reload the page with an Invalid credentials message
-        else:
-            message = 'Invalid Credentials'
-            return render_template("login.html", message=message)
+            # If not matched, reload the page with an Invalid credentials message
+            else:
+                message = 'Invalid Credentials'
+                return render_template("login.html", message=message)
 
 
 new_acc = False

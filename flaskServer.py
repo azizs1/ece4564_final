@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, url_for, render_template, request, redirect, session
 from flask import request
 import socket
 from flask_httpauth import HTTPBasicAuth
@@ -12,6 +12,9 @@ import yagmail
 # Create a Flask object named app
 app = Flask(__name__)
 
+# Configure the app to be able to use sessions
+app.secret_key = "testing"  # Change this to random string for more security
+
 # MongoDB Connection (Default Port)
 client = MongoClient('localhost', 27017)
 
@@ -19,7 +22,7 @@ client = MongoClient('localhost', 27017)
 db = client.ECE4564_FinalProject
 
 # Set the collection to the credentials collection
-col = db.service_auth
+credentials = db.service_auth
 
 # Create a HTTP Basic Authentication object named auth
 auth = HTTPBasicAuth()
@@ -118,46 +121,132 @@ def send_email(address, subject, contents):
 
 #     return r.text
 
+# This is the default app route, it checks for a user session and determines whether or not to go to the login page or
+# to go to the user's dashboard
+@app.route('/', methods=['POST', 'GET'])
+def home():
+    # If there is no user in a session, redirect to the login page
+    if not session.get("email"):
+        return redirect(url_for('login_page'))
+
+    # Otherwise go to the user's dashboard
+    else:
+        return redirect(url_for('dashboard'))
+
+
+# This is the login app route, it displays a login page with forms to fill out the user's email and password
 @app.route('/login', methods=['POST', 'GET'])
 def login_page():
-    message = ''
-    email = request.form.get('email')  # access the data inside 
-    password = request.form.get('password')
-    print(email,password)
-    
-    #implement some authentication with the db and if not match,
-    #message="Invalid credentials"
-    #if match go to dashboard
-    return render_template("login.html", message=message)
+    # If a user is already in a session then this page will be inaccessible
+    if session.get("email"):
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'GET':
+        message = ''
+        return render_template("login.html", message=message)
+
+    else:
+        email = request.form.get('email')  # access the data inside
+        password = request.form.get('password')
+
+        # Check credentials with the database
+        user_found = credentials.find_one(({'user': email, 'password': password}))
+
+        # if matched go to the user's dashboard
+        if user_found:
+            session["email"] = email    # Create the user's session
+            return redirect(url_for('dashboard'))
+
+        # If not matched, reload the page with an Invalid credentials message
+        else:
+            message = 'Invalid Credentials'
+            return render_template("login.html", message=message)
+
 
 new_acc = False
 
+
+# This is the account creation app route, it allows users to input new account credentials to the database
 @app.route('/create_acc', methods=['POST', 'GET'])
 def create_acc_page():
 
-    # if submit is pressed and account does not exist, 
-    # set new_acc to true which is set to false when dashboard is accessed
+    # If a user is already in a session then this page will be inaccessible
+    if session.get("email"):
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'GET':
+        message = ''
+        return render_template("create_acc.html", message=message)
+
+    else:
+
+        # Need some way to make sure email is a valid email?
+        email = request.form.get('email')  # access the data inside
+
+        password = request.form.get('password')
+        # password cannot be empty
+        if len(password) == 0:
+            message = 'Please input a password'
+            return render_template("create_acc.html", message=message)
+
+        # Check the email against the list of known users
+        user_found = credentials.find_one(({'user': email}))
+
+        # if email matches an existing account, then reload the page with an error message
+        if user_found:
+            message = 'Email already in use'
+            return render_template("create_acc.html", message=message)
+
+        # if email doesn't match any known emails, continue to preferences page
+        else:
+            # Establish this user's session
+            session["email"] = email
+
+            # Insert new account info into database
+            new_info = {'user': email, 'password': password}
+            credentials.insert_one(new_info)
+
+            # if submit is pressed and account does not exist,
+            # set new_acc to true which is set to false when dashboard is accessed
+            # Since the user doesn't exist, go through first time set up
+            new_acc = True
+            return redirect(url_for('prefs_page'))
 
 
-    # message = ''
-    # email = request.form.get('email')  # access the data inside 
-    # password = request.form.get('password')
-    # print(email,password)
-
-    #if email matches an existing account, 
-    #message="Email already in use"
-    #if not continue to prefs
-    return render_template("create_acc.html")
-    # return render_template("login.html", message=message)
-
+# This is the account preferences page, it allows the user to set their preferences for time and number of companies
 @app.route('/prefs', methods=['POST', 'GET'])
 def prefs_page():
+    # Can only be accessible if a user is in session
+    if not session.get("email"):
+        return redirect(url_for('login_page'))
+
     # message = ''
     # email = request.form.get('email')  # access the data inside 
     # password = request.form.get('password')
     # print(email,password)
     return render_template("prefs.html")
     # return render_template("login.html", message=message)
+
+
+# This is the dashboard page, it displays the user's stock portfolio data
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    # Can only be accessible if a user is in session
+    if not session.get("email"):
+        return redirect(url_for('login_page'))
+
+    # Dashboard needs to present the portfolio data
+    # Dashboard needs a logout button
+    return 'TODO'
+
+
+# This is the log out route, it ends the user's session
+@app.route("/logout")
+def logout():
+    # End the user's session and redirect to home page
+    session["email"] = None
+    return redirect(url_for('home'))
+
 
 # Run the application when service is started
 if __name__ == '__main__':

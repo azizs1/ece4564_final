@@ -1,0 +1,37 @@
+<html>
+  <script>
+    function refresh() {
+
+    }
+
+    function sendDigest() {
+
+    }
+  </script>
+  <head>
+    <title>SPT Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/dash_style.css') }}">
+    <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
+  </head>
+
+  <body>
+    <div>
+      <h1>Stock Portfolio Tracker</h1>
+      <button onclick="location.href='/login';">Log Out</button>
+      <button onclick="location.href='/prefs';">Preferences</button>
+      <button onclick="refresh()">Refresh</button>
+      <button onclick="sendDigest()">Send Digest</button>      
+    </div>
+    <h2>$(Current Value)</h2><h2 style="color:green; font-size: 1em;">$(Current-Initial)</h2>
+    <div class="stocks">
+      <h3>Stocks</h3>
+
+    </div>
+    <div class="news">
+      <h3>News</h3>
+    </div>
+    <div class="bottomstuff">
+        <span>ECE 4564 Final Project by Team 8<br />Fairuz Ahmed, Nolan Pletcher, Aziz Shaik</span>
+    </div>
+  </body>
+</html>

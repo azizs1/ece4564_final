@@ -139,7 +139,7 @@ def home():
 
     # Otherwise go to the user's dashboard
     else:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dash_page'))
 
 @app.route('/login', methods=['POST', 'GET'])
 def login_redir():
@@ -150,7 +150,7 @@ def login_redir():
 def login_page(message):
     # If a user is already in a session then this page will be inaccessible
     if session.get("email"):
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dash_page'))
     
     form = epForm()
     if request.method == 'POST':
@@ -163,7 +163,7 @@ def login_page(message):
             # if matched go to the user's dashboard
             if user_found:
                 session["email"] = email    # Create the user's session
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('dash_page'))
 
             # If not matched, reload the page with an Invalid credentials message
             else:
@@ -174,14 +174,51 @@ def login_page(message):
 
 new_acc = False
 
+@app.route('/create_acc', methods=['POST', 'GET'])
+def c_acc_redir():
+    return redirect(url_for('create_acc_page', message=" "))
 
 # This is the account creation app route, it allows users to input new account credentials to the database
-@app.route('/create_acc', methods=['POST', 'GET'])
-def create_acc_page():
+@app.route('/create_acc/<message>', methods=['POST', 'GET'])
+def create_acc_page(message):
 
     # If a user is already in a session then this page will be inaccessible
     if session.get("email"):
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dash_page'))
+
+    form = epForm()
+    if request.method == 'POST':
+        if form.is_submitted():
+            email = form.email.data
+            password = form.password.data
+            if len(password) == 0:
+                message = 'Please input a password'
+                return redirect(url_for('create_acc_page', message=message))
+        
+        # Check the email against the list of known users
+        user_found = credentials.find_one(({'user': email}))
+
+        # if email matches an existing account, then reload the page with an error message
+        if user_found:
+            message = 'Email already in use'
+            return redirect(url_for('create_acc_page', message=message))
+
+        # if email doesn't match any known emails, continue to preferences page
+        else:
+            # Establish this user's session
+            session["email"] = email
+
+            # Insert new account info into database
+            new_info = {'user': email, 'password': password}
+            credentials.insert_one(new_info)
+
+            # if submit is pressed and account does not exist,
+            # set new_acc to true which is set to false when dashboard is accessed
+            # Since the user doesn't exist, go through first time set up
+            new_acc = True
+            return redirect(url_for('prefs_page'))
+
+    return render_template("create_acc.html", message=message)
 
     if request.method == 'GET':
         message = ''
@@ -236,18 +273,13 @@ def prefs_page():
     return render_template("prefs.html")
     # return render_template("login.html", message=message)
 
-
-# This is the dashboard page, it displays the user's stock portfolio data
-@app.route('/dashboard', methods=['GET'])
-def dashboard():
+@app.route('/dash', methods=['GET'])
+def dash_page():
     # Can only be accessible if a user is in session
     if not session.get("email"):
         return redirect(url_for('login_page'))
 
-    # Dashboard needs to present the portfolio data
-    # Dashboard needs a logout button
-    return 'TODO'
-
+    return render_template("dashboard.html")
 
 # This is the log out route, it ends the user's session
 @app.route("/logout")

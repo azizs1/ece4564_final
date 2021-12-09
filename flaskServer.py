@@ -135,7 +135,7 @@ class epForm(FlaskForm):
 def home():
     # If there is no user in a session, redirect to the login page
     if not session.get("email"):
-        return redirect(url_for('login_page'))
+        return redirect(url_for('login_redir'))
 
     # Otherwise go to the user's dashboard
     else:

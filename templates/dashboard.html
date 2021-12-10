@@ -8,15 +8,32 @@
 
     }
 
-    function genStocks(stocks) {
+    function setVals(i_val, stocks) {
       var sdiv = document.getElementById("stock_section");
-      // console.log(stocks);
-
+      console.log(stocks);
+      console.log(i_val)
+      var cur_val = 0;
       for (var i = 0; i < stocks.length; i++) {
+        console.log(stocks[i]);
         var new_stock = document.createElement("h4");
         new_stock.innerHTML = stocks[i][0];
         sdiv.appendChild(new_stock);
+        cur_val += stocks[i][2]*stocks[i][1];
       }
+      var val_h2 = document.getElementById("cur_val");
+      val_h2.innerHTML = "$"+cur_val;
+
+      var change = cur_val-i_val;
+      var ch_h2 = document.getElementById("change");
+      if (change > 0) {
+        ch_h2.innerHTML = "+$"+change;
+        ch_h2.setAttribute("style","color:green; font-size: 1em;")
+      } else if (change < 0) {
+        change = change * -1;
+        ch_h2.innerHTML = "-$"+change;
+        ch_h2.setAttribute("style","color:red; font-size: 1em;")
+      }
+      
     }
   </script>
   <head>
@@ -25,7 +42,7 @@
     <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
   </head>
 
-  <body onload="genStocks({{ stocks }});">
+  <body onload="setVals({{ i_val }}, {{ stocks }});">
     <div>
       <h1>Stock Portfolio Tracker</h1>
       <button onclick="location.href='/logout';">Log Out</button>
@@ -33,7 +50,7 @@
       <button onclick="refresh()">Refresh</button>
       <button onclick="sendDigest()">Send Digest</button>      
     </div>
-    <h2>$(Current Value)</h2><h2 style="color:green; font-size: 1em;">$(Current-Initial)</h2>
+    <h2 id="cur_val">$(Current Value)</h2><h2 id="change" style="color:gray; font-size: 1em;">+$0</h2>
     <div class="stocks" id="stock_section">
       <h3>Stocks</h3>
 

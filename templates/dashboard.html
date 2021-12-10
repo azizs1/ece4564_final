@@ -8,15 +8,16 @@
 
     }
 
-    function setVals(i_val, stocks) {
+    function setVals(i_val, stocks, articles) {
       var sdiv = document.getElementById("stock_section");
-      console.log(stocks);
-      console.log(i_val)
+      // console.log(stocks);
+      // console.log(i_val)
       var cur_val = 0;
       for (var i = 0; i < stocks.length; i++) {
         console.log(stocks[i]);
         var new_stock = document.createElement("h4");
-        new_stock.innerHTML = stocks[i][0];
+        var total = stocks[i][2]*stocks[i][1]
+        new_stock.innerHTML = stocks[i][0]+", "+stocks[i][1]+", $"+stocks[i][2]+", $"+total;
         sdiv.appendChild(new_stock);
         cur_val += stocks[i][2]*stocks[i][1];
       }
@@ -34,6 +35,16 @@
         ch_h2.setAttribute("style","color:red; font-size: 1em;")
       }
       
+      console.log(articles)
+      var ndiv = document.getElementById("news_section");
+      for (var i = 0; i < articles.length; i++) {
+        console.log(articles[i]);
+        var new_stock = document.createElement("a");
+        new_stock.innerHTML = articles[i][0];
+        new_stock.setAttribute("href",articles[i][1])
+        ndiv.appendChild(new_stock);
+        // cur_val += stocks[i][2]*stocks[i][1];
+      }
     }
   </script>
   <head>
@@ -42,12 +53,12 @@
     <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
   </head>
 
-  <body onload="setVals({{ i_val }}, {{ stocks }});">
+  <body onload="setVals({{ i_val }}, {{ stocks }}, {{ articles }});">
     <div>
       <h1>Stock Portfolio Tracker</h1>
       <button onclick="location.href='/logout';">Log Out</button>
       <button onclick="location.href='/prefs';">Preferences</button>
-      <button onclick="refresh()">Refresh</button>
+      <button onclick="location.href='/dash/refresh';">Refresh</button>
       <button onclick="sendDigest()">Send Digest</button>      
     </div>
     <h2 id="cur_val">$(Current Value)</h2><h2 id="change" style="color:gray; font-size: 1em;">+$0</h2>
@@ -55,7 +66,7 @@
       <h3>Stocks</h3>
 
     </div>
-    <div class="news">
+    <div class="news" id="news_section">
       <h3>News</h3>
     </div>
     <div class="bottomstuff">

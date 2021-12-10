@@ -122,6 +122,7 @@ def checkDigest():
         if (((hoursElapsed % hoursPref) == 0) and (hoursPref != 0) and (sent == 0)):
 
             # Find user stocks and digest preference
+            i_val = stock_coll.find_one({"user": userEmail})['initial_val']
             stocks = stock_coll.find_one({"user": userEmail})['stocks']
             digest_pref = stock_coll.find_one({"user": userEmail})['digest']
 
@@ -143,7 +144,7 @@ def checkDigest():
                 
             # Update db
             user_filter = {'user': userEmail}
-            new_prefs = {"$set": {'stocks': stocks, 'digest': digest_pref}}
+            new_prefs = {"$set": {'initial_val': i_val, 'stocks': stocks, 'digest': digest_pref}}
             stock_coll.update_one(user_filter, new_prefs)
 
             # Create email body contents
@@ -154,9 +155,9 @@ def checkDigest():
             send_email(userEmail, digest_pref + " Stock Digest", contents)
             sent = 1
 
-t2 = threading.Thread(target=checkDigest)
-t2.daemon = True
-t2.start()
+# t2 = threading.Thread(target=checkDigest)
+# t2.daemon = True
+# t2.start()
 
 # Function for sending an email to the user
 # contents should be a list []
@@ -330,18 +331,19 @@ def prefs_page():
         userEmail = email
         user_found = stock_coll.find_one(({'user': email}))
 
+
         if user_found:
             # Update preferences
             user_filter = {'user': email}
-            new_prefs = {"$set": {'stocks': stocks, 'digest': digest_pref}}
+            new_prefs = {"$set": {'initial_val': 0, 'stocks': stocks, 'digest': digest_pref}}
             stock_coll.update_one(user_filter, new_prefs)
 
         else:
             # Add a new preference
-            stock_coll.insert_one({'user': email, 'stocks': stocks, 'digest': digest_pref})
+            stock_coll.insert_one({'initial_val': 0, 'user': email, 'stocks': stocks, 'digest': digest_pref})
 
         # Update stockTickers and stockPrices arrays with user's stocks
-        start_date_time = datetime.strptime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+        # start_date_time = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
 
         # Update number of hours for digest preferences
         if (digest_pref == "hourly"):
@@ -359,6 +361,36 @@ def prefs_page():
             # Create stock ticker
             stockTick = yfinance.Ticker(stock[0])
             stockTickers.append(stockTick)
+        
+        print(stockTickers)
+        print(stock_coll.find_one({"user": session["email"]}))
+        # Add price to stock in db
+        count = 0
+        stock_tmp = stocks
+        # for stock in stocks:
+        total_value = 0
+        print(stock_tmp)
+        print(len(stocks))
+        for i in range(len(stocks)):
+            print(stocks[i])
+            # Find price from ticker
+            price = stockTickers[i].info['regularMarketPrice']
+
+            # Update price in db
+            if (len(stocks[i]) == 3):
+                stock_tmp[i][2] = price
+            # Add price in db
+            else:
+                stock_tmp[i].append(price)
+                print("sdf",stock_tmp[i][2],stock_tmp[i][1])
+                total_value += float(stock_tmp[i][2])*float(stock_tmp[i][1])
+
+            # count += 1
+                
+        # Update db
+        user_filter = {'user': userEmail}
+        new_prefs = {"$set": {'initial_val': total_value, 'stocks': stock_tmp, 'digest': digest_pref}}
+        stock_coll.update_one(user_filter, new_prefs)
 
         return redirect(url_for('dash_page'))
     return render_template("prefs.html")
@@ -369,11 +401,12 @@ def dash_page():
     # Can only be accessible if a user is in session
     if not session.get("email"):
         return redirect(url_for('login_page'))
-
+    print(stock_coll.find_one({"user": session["email"]}))
     stocks = stock_coll.find_one({"user": session["email"]})['stocks']
+    initial_value = stock_coll.find_one({"user": session["email"]})['initial_val']
     # print(stock_coll.find_one({"user": session["email"]})['stocks'])
 
-    return render_template("dashboard.html", stocks=stocks)
+    return render_template("dashboard.html", stocks=stocks, i_val=initial_value)
 
 
 # This is the log out route, it ends the user's session

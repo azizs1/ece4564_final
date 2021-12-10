@@ -148,8 +148,13 @@ def checkDigest():
             stock_coll.update_one(user_filter, new_prefs)
 
             # Create email body contents
+            contents = ["Here is your stock digest:\n"]
+            for stock in stocks:
+                contents.append("Stock: " + stock[0] + " Shares owned: " + stock[1] + " Current price: " + stock[2] + "\n")
+
+            # Add total gain/loss
             # TODO
-            contents = []
+                
 
             # Send digest email
             send_email(userEmail, digest_pref + " Stock Digest", contents)

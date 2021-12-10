@@ -274,7 +274,10 @@ def dash_page():
     if not session.get("email"):
         return redirect(url_for('login_page'))
 
-    return render_template("dashboard.html")
+    stocks = stock_coll.find_one({"user": session["email"]})['stocks']
+    # print(stock_coll.find_one({"user": session["email"]})['stocks'])
+
+    return render_template("dashboard.html", stocks=stocks)
 
 
 # This is the log out route, it ends the user's session

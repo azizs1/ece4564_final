@@ -7,6 +7,17 @@
     function sendDigest() {
 
     }
+
+    function genStocks(stocks) {
+      var sdiv = document.getElementById("stock_section");
+      // console.log(stocks);
+
+      for (var i = 0; i < stocks.length; i++) {
+        var new_stock = document.createElement("h4");
+        new_stock.innerHTML = stocks[i][0];
+        sdiv.appendChild(new_stock);
+      }
+    }
   </script>
   <head>
     <title>SPT Login</title>
@@ -14,7 +25,7 @@
     <link rel="icon" href="https://emoji.gg/assets/emoji/6645_Stonks.png">
   </head>
 
-  <body>
+  <body onload="genStocks({{ stocks }});">
     <div>
       <h1>Stock Portfolio Tracker</h1>
       <button onclick="location.href='/logout';">Log Out</button>
@@ -23,7 +34,7 @@
       <button onclick="sendDigest()">Send Digest</button>      
     </div>
     <h2>$(Current Value)</h2><h2 style="color:green; font-size: 1em;">$(Current-Initial)</h2>
-    <div class="stocks">
+    <div class="stocks" id="stock_section">
       <h3>Stocks</h3>
 
     </div>

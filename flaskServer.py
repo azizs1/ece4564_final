@@ -1,5 +1,4 @@
 from flask import Flask, url_for, render_template, request, redirect, session
-from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField
 from wtforms.validators import DataRequired
@@ -132,6 +131,7 @@ class epForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired()])
     password = PasswordField('password', validators=[DataRequired()])
 
+
 # This is the default app route, it checks for a user session and determines whether or not to go to the login page or
 # to go to the user's dashboard
 @app.route('/', methods=['POST', 'GET'])
@@ -144,9 +144,11 @@ def home():
     else:
         return redirect(url_for('dash_page'))
 
+
 @app.route('/login', methods=['POST', 'GET'])
 def login_redir():
     return redirect(url_for('login_page', message=" "))
+
 
 # This is the login app route, it displays a login page with forms to fill out the user's email and password
 @app.route('/login/<message>', methods=['POST', 'GET'])
@@ -175,11 +177,14 @@ def login_page(message):
 
     return render_template("login.html", message=message, form=form)
 
+
 new_acc = False
+
 
 @app.route('/create_acc', methods=['POST', 'GET'])
 def c_acc_redir():
     return redirect(url_for('create_acc_page', message=" "))
+
 
 # This is the account creation app route, it allows users to input new account credentials to the database
 @app.route('/create_acc/<message>', methods=['POST', 'GET'])
@@ -223,44 +228,6 @@ def create_acc_page(message):
 
     return render_template("create_acc.html", message=message)
 
-    if request.method == 'GET':
-        message = ''
-        return render_template("create_acc.html", message=message)
-
-    else:
-
-        # Need some way to make sure email is a valid email?
-        email = request.form.get('email')  # access the data inside
-
-        password = request.form.get('password')
-        # password cannot be empty
-        if len(password) == 0:
-            message = 'Please input a password'
-            return render_template("create_acc.html", message=message)
-
-        # Check the email against the list of known users
-        user_found = credentials.find_one(({'user': email}))
-
-        # if email matches an existing account, then reload the page with an error message
-        if user_found:
-            message = 'Email already in use'
-            return render_template("create_acc.html", message=message)
-
-        # if email doesn't match any known emails, continue to preferences page
-        else:
-            # Establish this user's session
-            session["email"] = email
-
-            # Insert new account info into database
-            new_info = {'user': email, 'password': password}
-            credentials.insert_one(new_info)
-
-            # if submit is pressed and account does not exist,
-            # set new_acc to true which is set to false when dashboard is accessed
-            # Since the user doesn't exist, go through first time set up
-            new_acc = True
-            return redirect(url_for('prefs_page'))
-
 
 # This is the account preferences page, it allows the user to set their preferences for time and number of companies
 @app.route('/prefs', methods=['POST', 'GET'])
@@ -280,9 +247,26 @@ def prefs_page():
         digest_pref = request.form['hidden_field']
         print(digest_pref)
         print(stocks)
-        #store in db here
+
+        # store in db here
+        # If first time set up just add to database, otherwise need to update user preferences
+        # Search for user in stock portfolios collection
+        email = session["email"]
+        user_found = stock_coll.find_one(({'user': email}))
+
+        if user_found:
+            # Update preferences
+            user_filter = {'user': email}
+            new_prefs = {"$set": {'stocks': stocks, 'digest': digest_pref}}
+            stock_coll.update_one(user_filter, new_prefs)
+
+        else:
+            # Add a new preference
+            stock_coll.insert_one({'user': email, 'stocks': stocks, 'digest': digest_pref})
+
         return redirect(url_for('dash_page'))
     return render_template("prefs.html")
+
 
 @app.route('/dash', methods=['GET'])
 def dash_page():
@@ -291,6 +275,7 @@ def dash_page():
         return redirect(url_for('login_page'))
 
     return render_template("dashboard.html")
+
 
 # This is the log out route, it ends the user's session
 @app.route("/logout")

@@ -12,6 +12,7 @@ from serviceKeys import *
 import yagmail
 from datetime import datetime, timedelta
 import yfinance
+from newsapi import NewsApiClient
 
 # Create a Flask object named app
 app = Flask(__name__)
@@ -45,6 +46,9 @@ LEDcolors = []
 # Initialize variables for user email, stocks
 userEmail = ''
 stockTickers = []
+
+# Initialize NewsAPI client
+api = NewsApiClient(api_key=newsapi_key)
 
 # Initialize timing variables
 start_date_time = ''
@@ -169,9 +173,36 @@ t2.start()
 def send_email(address, subject, contents):
     yag.send(address, subject, contents)
 
+# Callback function that verifies credentials by searching for them on the database
+# @auth.verify_password
+# def verify_password(username, password):
+#     # Find an instance of this username and password pair in the database
+#     user = col.find_one({'username': username, 'password': password})
+
+#     # If the user is found then return the username, otherwise return nothing
+#     if user:
+#         return username
+#     return None
+  
+# Error Handler function which gives message when login credentials fail
+# @auth.error_handler
+# def unauthorized():
+#     return '401 - Unauthorized: Access is denied due to invalid credentials'
+
+# Post commands for the LED
+# @app.route('/LED', methods=['GET','POST'])
+# @auth.login_required
+# def led_command():
+
+#     # Take in URL parameters
+#     command = request.args.get('command')
+
+#     color = command
 
 #     # Send post request to LED
 #     r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ color)
+
+#     return r.text
 
 # This class specifies the structure for a standard login or account creation page
 class epForm(FlaskForm):
@@ -374,18 +405,62 @@ def prefs_page():
     return render_template("prefs.html")
 
 
-@app.route('/dash', methods=['GET'])
-def dash_page():
+@app.route('/dash', methods=['POST', 'GET'])
+def dash_redir():
+    return redirect(url_for('dash_page', status=" "))
+
+@app.route('/dash/<status>', methods=['GET'])
+def dash_page(status):
     # Can only be accessible if a user is in session
+    # global stockTickers
+    # stockTickers.clear()
+    stockTickers = []
+    for stock in stock_coll.find_one({"user": session["email"]})['stocks']:
+        print(stock[0])
+        # Create stock ticker
+        stockTick = yfinance.Ticker(stock[0])
+        stockTickers.append(stockTick)
+
+    if status == "refresh":
+        stocks = stock_coll.find_one({"user": session["email"]})['stocks']
+        stock_tmp = stocks
+        # for stock in stocks:
+        print(stock_tmp)
+        print(len(stocks))
+        print(len(stockTickers))
+        for i in range(len(stocks)):
+            print(stocks[i])
+            # Find price from ticker
+            price = stockTickers[i].info['regularMarketPrice']
+
+            # Update price in db
+            if (len(stocks[i]) == 3):
+                stock_tmp[i][2] = price
+            # Add price in db
+            else:
+                stock_tmp[i].append(price)
+                print("sdf",stock_tmp[i][2],stock_tmp[i][1])
+
+        user_filter = {'user': userEmail}
+        new_prefs = {"$set": {'initial_val': stock_coll.find_one({"user": session["email"]})['initial_val'], 'stocks': stock_tmp, 'digest': stock_coll.find_one({"user": session["email"]})['digest'] }}
+
+        stock_coll.update_one(user_filter, new_prefs)
+
     if not session.get("email"):
         return redirect(url_for('login_page'))
     print(stock_coll.find_one({"user": session["email"]}))
     stocks = stock_coll.find_one({"user": session["email"]})['stocks']
     initial_value = stock_coll.find_one({"user": session["email"]})['initial_val']
+    articles = []
     # print(stock_coll.find_one({"user": session["email"]})['stocks'])
-
-    return render_template("dashboard.html", stocks=stocks, i_val=initial_value)
-
+    for i in stocks:
+        query = i[0]+" stock"
+        news = api.get_everything(q=query,sort_by="relevancy")['articles']
+        # print(news)
+        articles.append([news[0]["title"], news[0]["url"]])
+        articles.append([news[1]["title"], news[1]["url"]])
+    print(articles)
+    return render_template("dashboard.html", stocks=stocks, i_val=initial_value, articles=articles)
 
 # This is the log out route, it ends the user's session
 @app.route("/logout")

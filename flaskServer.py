@@ -10,6 +10,8 @@ from zeroconf import ServiceBrowser, Zeroconf
 import threading
 from serviceKeys import *
 import yagmail
+from datetime import datetime, timedelta
+import yfinance
 
 # Create a Flask object named app
 app = Flask(__name__)
@@ -39,6 +41,15 @@ yag = yagmail.SMTP('ece4564final@gmail.com', 'FinalProject!64')
 LEDip = ''
 LEDport = ''
 LEDcolors = []
+
+# Initialize variables for user email, stocks
+userEmail = ''
+stockTickers = []
+
+# Initialize timing variables
+start_date_time = ''
+hoursElapsed = 0
+hoursPref = 0
 
 # Define class for listening for zeroconf advertising
 # Starter code taken from Zeroconf Github page - https://github.com/jstasiak/python-zeroconf
@@ -81,9 +92,73 @@ LEDcolors = []
 #     browser = ServiceBrowser(zc, "_http._tcp.local.", listener)
 #     print("Zeroconf: Initialized")
 
-# t = threading.Thread(target=runZeroconf)
-# t.daemon = True
-# t.start()
+# t1 = threading.Thread(target=runZeroconf)
+# t1.daemon = True
+# t1.start()
+
+# Calculate number of hours elapsed
+def get_delta(l, r):
+    return abs(int((l-r).total_seconds())) / 3600
+
+# Timer function to count hours elapsed
+def checkDigest():
+    global start_date_time
+    global hoursElapsed
+    global hoursPref
+    global userEmail
+
+    while(True):
+    
+        end_date_time = datetime.strptime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+
+        if (int(get_delta(start_date_time, end_date_time)) > hoursElapsed):
+            hoursElapsed += 1
+
+        # Check if digest preference hours elapsed have been met
+        if (((hoursElapsed % hoursPref) == 0) and (hoursPref != 0)):
+
+            # Find user stocks and digest preference
+            stocks = stock_coll.find_one({"user": userEmail})['stocks']
+            digest_pref = stock_coll.find_one({"user": userEmail})['digest']
+
+            # Add price to stock in db
+            count = 0
+            for stock in stocks:
+                
+                # Find price from ticker
+                price = stockTickers[count].info['regularMarketPrice']
+
+                # Update price in db
+                if (len(stock) == 3):
+                    stock[2] = price
+                # Add price in db
+                else:
+                    stock.append(price)
+
+                count += 1
+                
+            user_filter = {'user': userEmail}
+            new_prefs = {"$set": {'stocks': stocks, 'digest': digest_pref}}
+            stock_coll.update_one(user_filter, new_prefs)
+
+            # Determine user's digest preference interval
+            prefStr = ''
+            if (hoursPref == 1):
+                prefStr = "Hourly"
+            elif (hoursPref == 24):
+                prefStr = "Daily"
+            elif (hoursPref == 168):
+                prefStr = "Weekly"
+
+            # Create email body contents
+            # TODO
+            contents = []
+
+            send_email(userEmail, prefStr + " Stock Digest", contents)
+
+t2 = threading.Thread(target=checkDigest)
+t2.daemon = True
+t2.start()
 
 # Function for sending an email to the user
 # contents should be a list []
@@ -105,11 +180,6 @@ def send_email(address, subject, contents):
 # @auth.error_handler
 # def unauthorized():
 #     return '401 - Unauthorized: Access is denied due to invalid credentials'
-  
-# Functions for API calls here
-# Stock stuff here
-# TODO
-
 
 # Post commands for the LED
 # @app.route('/LED', methods=['GET','POST'])
@@ -232,6 +302,13 @@ def create_acc_page(message):
 # This is the account preferences page, it allows the user to set their preferences for time and number of companies
 @app.route('/prefs', methods=['POST', 'GET'])
 def prefs_page():
+
+    # Access global stockTicker array
+    global stockTickers
+    global start_date_time
+    global hoursPref
+    global userEmail
+
     # Can only be accessible if a user is in session
     if not session.get("email"):
         return redirect(url_for('login_page'))
@@ -252,6 +329,7 @@ def prefs_page():
         # If first time set up just add to database, otherwise need to update user preferences
         # Search for user in stock portfolios collection
         email = session["email"]
+        userEmail = email
         user_found = stock_coll.find_one(({'user': email}))
 
         if user_found:
@@ -263,6 +341,26 @@ def prefs_page():
         else:
             # Add a new preference
             stock_coll.insert_one({'user': email, 'stocks': stocks, 'digest': digest_pref})
+
+        # Update stockTickers and stockPrices arrays with user's stocks
+        start_date_time = datetime.strptime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+
+        # Update number of hours for digest preferences
+        if (digest_pref == "hourly"):
+            hoursPref = 1
+        elif (digest_pref == "daily"):
+            hoursPref = 24
+        elif (digest_pref == "weekly"):
+            hoursPref = 168
+        else:
+            hoursPref = 0
+
+        stockTickers.clear()
+        for stock in stock_coll.find_one({"user":email})['stocks']:
+
+            # Create stock ticker
+            stockTick = yfinance.Ticker(stock[0])
+            stockTickers.append(stockTick)
 
         return redirect(url_for('dash_page'))
     return render_template("prefs.html")

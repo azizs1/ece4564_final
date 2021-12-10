@@ -53,48 +53,48 @@ hoursPref = 0
 
 # Define class for listening for zeroconf advertising
 # Starter code taken from Zeroconf Github page - https://github.com/jstasiak/python-zeroconf
-# class Listener:
-#     def remove_service(self, zeroconf, type, name):
-#         print("Zeroconf: Service %s removed" % (name,))
+class Listener:
+    def remove_service(self, zeroconf, type, name):
+        print("Zeroconf: Service %s removed" % (name,))
 
-#     def update_service():
-#         pass
+    def update_service():
+        pass
 
-#     def add_service(self, zeroconf, type, name):
-#         global LEDip
-#         global LEDport
-#         global LEDcolors
+    def add_service(self, zeroconf, type, name):
+        global LEDip
+        global LEDport
+        global LEDcolors
 
-#         info = zeroconf.get_service_info(type, name)
+        info = zeroconf.get_service_info(type, name)
 
-#         if (info):
+        if (info):
 
-#             print("Zeroconf: Service %s added, service info: %s" % (name, info))
+            print("Zeroconf: Service %s added, service info: %s" % (name, info))
 
-#             # Grab IP address and port from ServiceInfo object
-#             LEDip = socket.inet_ntoa(info.address)
-#             print("Zeroconf: IP address found: " + LEDip)
-#             LEDport = info.port
-#             print("Zeroconf: Port found: " + str(LEDport))
+            # Grab IP address and port from ServiceInfo object
+            LEDip = socket.inet_ntoa(info.address)
+            print("Zeroconf: IP address found: " + LEDip)
+            LEDport = info.port
+            print("Zeroconf: Port found: " + str(LEDport))
 
-#             # Grab list of colors from ServiceInfo object
-#             print("Zeroconf: Colors available: " + str(info.properties))
-#             LEDcolors = info.properties[b'Colors']
+            # Grab list of colors from ServiceInfo object
+            print("Zeroconf: Colors available: " + str(info.properties))
+            LEDcolors = info.properties[b'Colors']
         
-#         else:
-#             print("Zeroconf: No service found")
+        else:
+            print("Zeroconf: No service found")
 
             
-# # Run zeroconf listener to check for new services
-# def runZeroconf():
-#     zc = Zeroconf()
-#     listener = Listener()
-#     browser = ServiceBrowser(zc, "_http._tcp.local.", listener)
-#     print("Zeroconf: Initialized")
+# Run zeroconf listener to check for new services
+def runZeroconf():
+    zc = Zeroconf()
+    listener = Listener()
+    browser = ServiceBrowser(zc, "_http._tcp.local.", listener)
+    print("Zeroconf: Initialized")
 
-# t1 = threading.Thread(target=runZeroconf)
-# t1.daemon = True
-# t1.start()
+t1 = threading.Thread(target=runZeroconf)
+t1.daemon = True
+t1.start()
 
 # Calculate number of hours elapsed
 def get_delta(l, r):
@@ -111,7 +111,7 @@ def checkDigest():
 
     while(True):
     
-        end_date_time = datetime.strptime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+        end_date_time = datetime.now()
 
         # Increment hours elapsed, if an hour passed, reset email sent flag
         if (int(get_delta(start_date_time, end_date_time)) > hoursElapsed):
@@ -148,52 +148,30 @@ def checkDigest():
             stock_coll.update_one(user_filter, new_prefs)
 
             # Create email body contents
+            contents = ["Here is your stock digest:\n"]
+            for stock in stocks:
+                contents.append("Stock: " + stock[0] + " Shares owned: " + stock[1] + " Current price: " + stock[2] + "\n")
+
+            # Add total gain/loss
             # TODO
-            contents = []
+                
 
             # Send digest email
             send_email(userEmail, digest_pref + " Stock Digest", contents)
             sent = 1
 
-# t2 = threading.Thread(target=checkDigest)
-# t2.daemon = True
-# t2.start()
+t2 = threading.Thread(target=checkDigest)
+t2.daemon = True
+t2.start()
 
 # Function for sending an email to the user
 # contents should be a list []
 def send_email(address, subject, contents):
     yag.send(address, subject, contents)
 
-# Callback function that verifies credentials by searching for them on the database
-# @auth.verify_password
-# def verify_password(username, password):
-#     # Find an instance of this username and password pair in the database
-#     user = col.find_one({'username': username, 'password': password})
-
-#     # If the user is found then return the username, otherwise return nothing
-#     if user:
-#         return username
-#     return None
-  
-# Error Handler function which gives message when login credentials fail
-# @auth.error_handler
-# def unauthorized():
-#     return '401 - Unauthorized: Access is denied due to invalid credentials'
-
-# Post commands for the LED
-# @app.route('/LED', methods=['GET','POST'])
-# @auth.login_required
-# def led_command():
-
-#     # Take in URL parameters
-#     command = request.args.get('command')
-
-#     color = command
 
 #     # Send post request to LED
 #     r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ color)
-
-#     return r.text
 
 # This class specifies the structure for a standard login or account creation page
 class epForm(FlaskForm):
@@ -343,7 +321,7 @@ def prefs_page():
             stock_coll.insert_one({'initial_val': 0, 'user': email, 'stocks': stocks, 'digest': digest_pref})
 
         # Update stockTickers and stockPrices arrays with user's stocks
-        # start_date_time = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+        start_date_time = datetime.now()
 
         # Update number of hours for digest preferences
         if (digest_pref == "hourly"):

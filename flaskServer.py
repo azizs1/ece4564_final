@@ -158,8 +158,25 @@ def checkDigest():
 
             # Add total gain/loss
             # TODO
-                
+            count = 0
+            stock_tmp = stocks
+            # for stock in stocks:
+            total_value = 0
+            print(stock_tmp)
+            stocks = stock_coll.find_one({"user": userEmail})['stocks']
+            print(len(stocks))
+            for i in range(len(stocks)):
+                print(stocks[i])
+                # Find price from ticker
+                price = stockTickers[i].info['regularMarketPrice']
 
+                # Update price in db
+                if (len(stocks[i]) == 3):
+                    stocks[i][2] = price
+                # Add price in db
+                else:
+                    total_value += float(stocks[i][2])*float(stocks[i][1])
+            
             # Send digest email
             send_email(userEmail, digest_pref + " Stock Digest", contents)
             sent = 1

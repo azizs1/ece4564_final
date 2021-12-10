@@ -107,15 +107,19 @@ def checkDigest():
     global hoursPref
     global userEmail
 
+    sent = 0
+
     while(True):
     
         end_date_time = datetime.strptime(datetime.now(), "%Y-%m-%d %H:%M:%S")
 
+        # Increment hours elapsed, if an hour passed, reset email sent flag
         if (int(get_delta(start_date_time, end_date_time)) > hoursElapsed):
             hoursElapsed += 1
+            sent = 0
 
         # Check if digest preference hours elapsed have been met
-        if (((hoursElapsed % hoursPref) == 0) and (hoursPref != 0)):
+        if (((hoursElapsed % hoursPref) == 0) and (hoursPref != 0) and (sent == 0)):
 
             # Find user stocks and digest preference
             stocks = stock_coll.find_one({"user": userEmail})['stocks']
@@ -137,24 +141,18 @@ def checkDigest():
 
                 count += 1
                 
+            # Update db
             user_filter = {'user': userEmail}
             new_prefs = {"$set": {'stocks': stocks, 'digest': digest_pref}}
             stock_coll.update_one(user_filter, new_prefs)
-
-            # Determine user's digest preference interval
-            prefStr = ''
-            if (hoursPref == 1):
-                prefStr = "Hourly"
-            elif (hoursPref == 24):
-                prefStr = "Daily"
-            elif (hoursPref == 168):
-                prefStr = "Weekly"
 
             # Create email body contents
             # TODO
             contents = []
 
-            send_email(userEmail, prefStr + " Stock Digest", contents)
+            # Send digest email
+            send_email(userEmail, digest_pref + " Stock Digest", contents)
+            sent = 1
 
 t2 = threading.Thread(target=checkDigest)
 t2.daemon = True

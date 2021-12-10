@@ -157,8 +157,6 @@ def checkDigest():
                 contents.append("Stock: " + stock[0] + " Shares owned: " + stock[1] + " Current price: " + stock[2] + "\n")
 
             # Add total gain/loss
-            # TODO
-            count = 0
             stock_tmp = stocks
             # for stock in stocks:
             total_value = 0
@@ -176,6 +174,15 @@ def checkDigest():
                 # Add price in db
                 else:
                     total_value += float(stocks[i][2])*float(stocks[i][1])
+
+            # Add total gain/loss to email body
+            contents.append("Total gain/loss: " + str(total_value))
+
+            # Activate LED depending on gain/loss
+            if (total_value < 0):
+                r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'red')
+            else:
+                r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'green')
             
             # Send digest email
             send_email(userEmail, digest_pref + " Stock Digest", contents)
@@ -190,36 +197,6 @@ t2.start()
 def send_email(address, subject, contents):
     yag.send(address, subject, contents)
 
-# Callback function that verifies credentials by searching for them on the database
-# @auth.verify_password
-# def verify_password(username, password):
-#     # Find an instance of this username and password pair in the database
-#     user = col.find_one({'username': username, 'password': password})
-
-#     # If the user is found then return the username, otherwise return nothing
-#     if user:
-#         return username
-#     return None
-  
-# Error Handler function which gives message when login credentials fail
-# @auth.error_handler
-# def unauthorized():
-#     return '401 - Unauthorized: Access is denied due to invalid credentials'
-
-# Post commands for the LED
-# @app.route('/LED', methods=['GET','POST'])
-# @auth.login_required
-# def led_command():
-
-#     # Take in URL parameters
-#     command = request.args.get('command')
-
-#     color = command
-
-#     # Send post request to LED
-#     r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ color)
-
-#     return r.text
 
 # This class specifies the structure for a standard login or account creation page
 class epForm(FlaskForm):

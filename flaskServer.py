@@ -192,6 +192,60 @@ t2 = threading.Thread(target=checkDigest)
 t2.daemon = True
 t2.start()
 
+def send_dummy():
+    # Find user stocks and digest preference
+    i_val = stock_coll.find_one({"user": userEmail})['initial_val']
+    stocks = stock_coll.find_one({"user": userEmail})['stocks']
+    digest_pref = stock_coll.find_one({"user": userEmail})['digest']
+
+    # Add price to stock in db
+    count = 0
+    for stock in stocks:
+        
+        # Find price from ticker
+        price = stockTickers[count].info['regularMarketPrice']
+
+        # Update price in db
+        if (len(stock) == 3):
+            stock[2] = price
+        # Add price in db
+        else:
+            stock.append(price)
+
+        count += 1
+        
+    # Update db
+    user_filter = {'user': userEmail}
+    new_prefs = {"$set": {'initial_val': i_val, 'stocks': stocks, 'digest': digest_pref}}
+    stock_coll.update_one(user_filter, new_prefs)
+
+    # Create email body contents
+    contents = ["Here is your stock digest:\n"]
+    for stock in stocks:
+        contents.append("Stock: " + stock[0] + " Shares owned: " + stock[1] + " Current price: " + stock[2] + "\n")
+
+    # Add total gain/loss
+    stock_tmp = stocks
+    # for stock in stocks:
+    total_value = 0
+    print(stock_tmp)
+    stocks = stock_coll.find_one({"user": userEmail})['stocks']
+    print(len(stocks))
+    for i in range(len(stocks)):
+        print(stocks[i])
+        # Find price from ticker
+        price = stockTickers[i].info['regularMarketPrice']
+
+        # Update price in db
+        if (len(stocks[i]) == 3):
+            stocks[i][2] = price
+        # Add price in db
+        else:
+            total_value += float(stocks[i][2])*float(stocks[i][1])
+
+    # Add total gain/loss to email body
+    contents.append("Total gain/loss: " + str(total_value))
+
 # Function for sending an email to the user
 # contents should be a list []
 def send_email(address, subject, contents):
@@ -454,6 +508,9 @@ def dash_page(status):
         articles.append([news[0]["title"], news[0]["url"]])
         articles.append([news[1]["title"], news[1]["url"]])
     print(articles)
+
+    send_dummy()
+    
     return render_template("dashboard.html", stocks=stocks, i_val=initial_value, articles=articles)
 
 # This is the log out route, it ends the user's session

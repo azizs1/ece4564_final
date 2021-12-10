@@ -48,8 +48,6 @@ except:
 # Interpret LED command
 def updateLED(color):
 
-    
-
     if (color == "red"):
         rLED.start(100)
         gLED.stop()

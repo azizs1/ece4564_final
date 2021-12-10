@@ -81,10 +81,6 @@ class Listener:
             LEDport = info.port
             print("Zeroconf: Port found: " + str(LEDport))
 
-            # Grab list of colors from ServiceInfo object
-#             print("Zeroconf: Colors available: " + str(info.properties))
-#             LEDcolors = info.properties[b'Colors']
-
         else:
             print("Zeroconf: No service found")
 
@@ -179,8 +175,16 @@ def checkDigest():
                         total_value += float(stocks[i][2])*float(stocks[i][1])
 
                 # Add total gain/loss to email body
-                contents.append("Total gain/loss: " + str(total_value))
-                print("GHERE")
+                contents.append("Total gain/loss: " + str(total_value) + "\n\n")
+
+                # Add news articles to email body
+                for i in stocks:
+                    query = i[0]+" stock"
+                    news = api.get_everything(q=query,sort_by="relevancy")['articles']
+                    # print(news)
+                    contents.append([news[0]["title"], news[0]["url"]])
+                    contents.append([news[1]["title"], news[1]["url"]])
+
                 # Activate LED depending on gain/loss
                 if (total_value < 0):
                     r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'red')
@@ -452,7 +456,7 @@ def dash_page(status):
     stocks = stock_coll.find_one({"user": session["email"]})['stocks']
     initial_value = stock_coll.find_one({"user": session["email"]})['initial_val']
     articles = []
-    # print(stock_coll.find_one({"user": session["email"]})['stocks'])
+
     for i in stocks:
         query = i[0]+" stock"
         news = api.get_everything(q=query,sort_by="relevancy")['articles']

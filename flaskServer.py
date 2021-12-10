@@ -111,7 +111,7 @@ def checkDigest():
 
     while(True):
     
-        end_date_time = datetime.strptime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+        end_date_time = datetime.now()
 
         # Increment hours elapsed, if an hour passed, reset email sent flag
         if (int(get_delta(start_date_time, end_date_time)) > hoursElapsed):
@@ -348,7 +348,7 @@ def prefs_page():
             stock_coll.insert_one({'initial_val': 0, 'user': email, 'stocks': stocks, 'digest': digest_pref})
 
         # Update stockTickers and stockPrices arrays with user's stocks
-        # start_date_time = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+        start_date_time = datetime.now()
 
         # Update number of hours for digest preferences
         if (digest_pref == "hourly"):

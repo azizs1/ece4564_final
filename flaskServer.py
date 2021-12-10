@@ -51,7 +51,7 @@ stockTickers = []
 api = NewsApiClient(api_key=newsapi_key)
 
 # Initialize timing variables
-start_date_time = ''
+start_date_time = datetime.now()
 hoursElapsed = 0
 hoursPref = 0
 
@@ -82,9 +82,9 @@ class Listener:
             print("Zeroconf: Port found: " + str(LEDport))
 
             # Grab list of colors from ServiceInfo object
-            print("Zeroconf: Colors available: " + str(info.properties))
-            LEDcolors = info.properties[b'Colors']
-        
+#             print("Zeroconf: Colors available: " + str(info.properties))
+#             LEDcolors = info.properties[b'Colors']
+
         else:
             print("Zeroconf: No service found")
 
@@ -110,6 +110,8 @@ def checkDigest():
     global hoursElapsed
     global hoursPref
     global userEmail
+    global LEDip
+    global LEDport
 
     sent = 0
 
@@ -123,128 +125,75 @@ def checkDigest():
             sent = 0
 
         # Check if digest preference hours elapsed have been met
-        if (((hoursElapsed % hoursPref) == 0) and (hoursPref != 0) and (sent == 0)):
+        if (hoursPref != 0):
+            if (((hoursElapsed % hoursPref) == 0) and (sent == 0)):
 
-            # Find user stocks and digest preference
-            i_val = stock_coll.find_one({"user": userEmail})['initial_val']
-            stocks = stock_coll.find_one({"user": userEmail})['stocks']
-            digest_pref = stock_coll.find_one({"user": userEmail})['digest']
+                # Find user stocks and digest preference
+                i_val = stock_coll.find_one({"user": userEmail})['initial_val']
+                stocks = stock_coll.find_one({"user": userEmail})['stocks']
+                digest_pref = stock_coll.find_one({"user": userEmail})['digest']
 
-            # Add price to stock in db
-            count = 0
-            for stock in stocks:
-                
-                # Find price from ticker
-                price = stockTickers[count].info['regularMarketPrice']
+                # Add price to stock in db
+                count = 0
+                for stock in stocks:
+                    
+                    # Find price from ticker
+                    price = stockTickers[count].info['regularMarketPrice']
 
-                # Update price in db
-                if (len(stock) == 3):
-                    stock[2] = price
-                # Add price in db
+                    # Update price in db
+                    if (len(stock) == 3):
+                        stock[2] = price
+                    # Add price in db
+                    else:
+                        stock.append(price)
+
+                    count += 1
+                    
+                # Update db
+                user_filter = {'user': userEmail}
+                new_prefs = {"$set": {'initial_val': i_val, 'stocks': stocks, 'digest': digest_pref}}
+                stock_coll.update_one(user_filter, new_prefs)
+
+                # Create email body contents
+                contents = ["Here is your stock digest:\n"]
+                for stock in stocks:
+                    contents.append("Stock: " + str(stock[0]) + " Shares owned: " + str(stock[1]) + " Current price: " + str(stock[2]) + "\n")
+
+                # Add total gain/loss
+                stock_tmp = stocks
+                # for stock in stocks:
+                total_value = 0
+                print(stock_tmp)
+                stocks = stock_coll.find_one({"user": userEmail})['stocks']
+                print(len(stocks))
+                for i in range(len(stocks)):
+                    print(stocks[i])
+                    # Find price from ticker
+                    price = stockTickers[i].info['regularMarketPrice']
+
+                    # Update price in db
+                    if (len(stocks[i]) == 3):
+                        stocks[i][2] = price
+                    # Add price in db
+                    else:
+                        total_value += float(stocks[i][2])*float(stocks[i][1])
+
+                # Add total gain/loss to email body
+                contents.append("Total gain/loss: " + str(total_value))
+                print("GHERE")
+                # Activate LED depending on gain/loss
+                if (total_value < 0):
+                    r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'red')
                 else:
-                    stock.append(price)
-
-                count += 1
+                    r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'green')
                 
-            # Update db
-            user_filter = {'user': userEmail}
-            new_prefs = {"$set": {'initial_val': i_val, 'stocks': stocks, 'digest': digest_pref}}
-            stock_coll.update_one(user_filter, new_prefs)
-
-            # Create email body contents
-            contents = ["Here is your stock digest:\n"]
-            for stock in stocks:
-                contents.append("Stock: " + stock[0] + " Shares owned: " + stock[1] + " Current price: " + stock[2] + "\n")
-
-            # Add total gain/loss
-            stock_tmp = stocks
-            # for stock in stocks:
-            total_value = 0
-            print(stock_tmp)
-            stocks = stock_coll.find_one({"user": userEmail})['stocks']
-            print(len(stocks))
-            for i in range(len(stocks)):
-                print(stocks[i])
-                # Find price from ticker
-                price = stockTickers[i].info['regularMarketPrice']
-
-                # Update price in db
-                if (len(stocks[i]) == 3):
-                    stocks[i][2] = price
-                # Add price in db
-                else:
-                    total_value += float(stocks[i][2])*float(stocks[i][1])
-
-            # Add total gain/loss to email body
-            contents.append("Total gain/loss: " + str(total_value))
-
-            # Activate LED depending on gain/loss
-            if (total_value < 0):
-                r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'red')
-            else:
-                r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'green')
-            
-            # Send digest email
-            send_email(userEmail, digest_pref + " Stock Digest", contents)
-            sent = 1
+                # Send digest email
+                send_email(userEmail, digest_pref + " Stock Digest", contents)
+                sent = 1
 
 t2 = threading.Thread(target=checkDigest)
 t2.daemon = True
 t2.start()
-
-def send_dummy():
-    # Find user stocks and digest preference
-    i_val = stock_coll.find_one({"user": userEmail})['initial_val']
-    stocks = stock_coll.find_one({"user": userEmail})['stocks']
-    digest_pref = stock_coll.find_one({"user": userEmail})['digest']
-
-    # Add price to stock in db
-    count = 0
-    for stock in stocks:
-        
-        # Find price from ticker
-        price = stockTickers[count].info['regularMarketPrice']
-
-        # Update price in db
-        if (len(stock) == 3):
-            stock[2] = price
-        # Add price in db
-        else:
-            stock.append(price)
-
-        count += 1
-        
-    # Update db
-    user_filter = {'user': userEmail}
-    new_prefs = {"$set": {'initial_val': i_val, 'stocks': stocks, 'digest': digest_pref}}
-    stock_coll.update_one(user_filter, new_prefs)
-
-    # Create email body contents
-    contents = ["Here is your stock digest:\n"]
-    for stock in stocks:
-        contents.append("Stock: " + stock[0] + " Shares owned: " + stock[1] + " Current price: " + stock[2] + "\n")
-
-    # Add total gain/loss
-    stock_tmp = stocks
-    # for stock in stocks:
-    total_value = 0
-    print(stock_tmp)
-    stocks = stock_coll.find_one({"user": userEmail})['stocks']
-    print(len(stocks))
-    for i in range(len(stocks)):
-        print(stocks[i])
-        # Find price from ticker
-        price = stockTickers[i].info['regularMarketPrice']
-
-        # Update price in db
-        if (len(stocks[i]) == 3):
-            stocks[i][2] = price
-        # Add price in db
-        else:
-            total_value += float(stocks[i][2])*float(stocks[i][1])
-
-    # Add total gain/loss to email body
-    contents.append("Total gain/loss: " + str(total_value))
 
 # Function for sending an email to the user
 # contents should be a list []
@@ -268,7 +217,7 @@ def home():
 
     # Otherwise go to the user's dashboard
     else:
-        return redirect(url_for('dash_page'))
+        return redirect(url_for('dash_redir'))
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -281,7 +230,7 @@ def login_redir():
 def login_page(message):
     # If a user is already in a session then this page will be inaccessible
     if session.get("email"):
-        return redirect(url_for('dash_page'))
+        return redirect(url_for('dash_redir'))
     
     form = epForm()
     if request.method == 'POST':
@@ -294,7 +243,7 @@ def login_page(message):
             # if matched go to the user's dashboard
             if user_found:
                 session["email"] = email    # Create the user's session
-                return redirect(url_for('dash_page'))
+                return redirect(url_for('dash_redir'))
 
             # If not matched, reload the page with an Invalid credentials message
             else:
@@ -318,7 +267,7 @@ def create_acc_page(message):
 
     # If a user is already in a session then this page will be inaccessible
     if session.get("email"):
-        return redirect(url_for('dash_page'))
+        return redirect(url_for('dash_redir'))
 
     form = epForm()
     if request.method == 'POST':
@@ -449,7 +398,7 @@ def prefs_page():
         new_prefs = {"$set": {'initial_val': total_value, 'stocks': stock_tmp, 'digest': digest_pref}}
         stock_coll.update_one(user_filter, new_prefs)
 
-        return redirect(url_for('dash_page'))
+        return redirect(url_for('dash_redir'))
     return render_template("prefs.html")
 
 
@@ -462,6 +411,9 @@ def dash_page(status):
     # Can only be accessible if a user is in session
     # global stockTickers
     # stockTickers.clear()
+    global LEDip
+    global LEDport
+    
     stockTickers = []
     for stock in stock_coll.find_one({"user": session["email"]})['stocks']:
         print(stock[0])
@@ -508,8 +460,30 @@ def dash_page(status):
         articles.append([news[0]["title"], news[0]["url"]])
         articles.append([news[1]["title"], news[1]["url"]])
     print(articles)
+    
+    total_value = 0
+     
+    stocks = stock_coll.find_one({"user": session["email"]})['stocks']
+    print(len(stocks))
+    for i in range(len(stocks)):
+        print(stocks[i])
+        # Find price from ticker
+        price = stockTickers[i].info['regularMarketPrice']
 
-    send_dummy()
+        # Update price in db
+        if (len(stocks[i]) == 3):
+            stocks[i][2] = price
+        # Add price in db 
+        else:
+            total_value += float(stocks[i][2])*float(stocks[i][1])
+    
+    # Activate LED depending on gain/loss
+    if (total_value < 0):
+        r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'red')
+    else:
+        r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'green')
+    
+    #send_dummy()
     
     return render_template("dashboard.html", stocks=stocks, i_val=initial_value, articles=articles)
 
@@ -523,4 +497,5 @@ def logout():
 
 # Run the application when service is started
 if __name__ == '__main__':
-    app.run(debug=True)
+    #app.run(debug=True)
+    app.run(host='0.0.0.0')

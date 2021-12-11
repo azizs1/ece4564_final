@@ -59,29 +59,18 @@ label {
   border-radius: 90px;
   outline-color: rgb(232, 119, 34);
   
-  /* align-items: center;
-  margin: auto; */
   margin-top: 15px;
   margin-right: 10px;
   background-color: rgb(255, 255, 255);
   box-shadow: 0 0 1px 1px rgb(232, 119, 34);
   display: block;
   flex-direction: row;
-  /* grid-template-columns: repeat(3, 1fr); */
-  /* grid-template-columns: 50% 50%; */
 }
 
 .row {
   display: flex;
   align-content: center;
-  /* align-items: center; */
   justify-content: center;
-  /* flex-direction: row; */
-  /* align-content: flex-start; */
-  
-  /* flex-wrap: wrap; */
-  /* width: 200px;
-  height: 200px; */
 }
 
 .container {
@@ -111,7 +100,6 @@ input[type="submit"], button {
   border-radius: 90px;
   outline-color: rgb(103, 185, 27);
   display: grid;
-  /* grid-template-columns: 50% 50%; */
   align-items: center;
   text-align: center;
   margin: auto;

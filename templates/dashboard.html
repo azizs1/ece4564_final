@@ -1,18 +1,9 @@
 <html>
   <script>
-    function refresh() {
-
-    }
-
-    function sendDigest() {
-
-    }
-
     function setVals(i_val, stocks, articles) {
       var sdiv = document.getElementById("stock_section");
-      // console.log(stocks);
-      // console.log(i_val)
       var cur_val = 0;
+      // Dynamically create elements for each stock
       for (var i = 0; i < stocks.length; i++) {
         console.log(stocks[i]);
         var new_stock = document.createElement("h4");
@@ -21,11 +12,14 @@
         sdiv.appendChild(new_stock);
         cur_val += stocks[i][2]*stocks[i][1];
       }
+
+      // Write in the current portfolio value and the change from initial
       var val_h2 = document.getElementById("cur_val");
       val_h2.innerHTML = "$"+cur_val;
-
       var change = cur_val-i_val;
       var ch_h2 = document.getElementById("change");
+
+      // Change font color based on this change
       if (change > 0) {
         ch_h2.innerHTML = "+$"+change;
         ch_h2.setAttribute("style","color:green; font-size: 1em;")
@@ -35,7 +29,7 @@
         ch_h2.setAttribute("style","color:red; font-size: 1em;")
       }
       
-      console.log(articles)
+      // Write in and provide links for the right articles
       var ndiv = document.getElementById("news_section");
       for (var i = 0; i < articles.length; i++) {
         console.log(articles[i]);
@@ -43,7 +37,6 @@
         new_stock.innerHTML = articles[i][0];
         new_stock.setAttribute("href",articles[i][1])
         ndiv.appendChild(new_stock);
-        // cur_val += stocks[i][2]*stocks[i][1];
       }
     }
   </script>

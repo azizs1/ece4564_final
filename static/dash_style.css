@@ -43,7 +43,6 @@ a {
   margin-bottom: 10px;
   margin-left: 10px;
   display: table-column;
-  /* color: initial; */
 }
 
 span {
@@ -146,5 +145,4 @@ button {
 
 .news {
   margin-left: 50%;
-  /* text-align: center; */
 }

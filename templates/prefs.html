@@ -1,6 +1,7 @@
 <html>
   <script>
     function getRadio() {
+      // This function gets the chosen radio button value for digest prefs
       var opts = document.getElementsByName('radio');
       for(i = 0; i < opts.length; i++) {
         if(opts[i].checked) {return opts[i].value;}
@@ -9,6 +10,7 @@
     }
 
     function genFields() {
+      // Dynamically generate fields for the stock based on user input
       var x = document.getElementById("stock_num_form");
       var num_str = x.elements[0].value;
       var num = 0;
@@ -23,6 +25,8 @@
       form.setAttribute("id", "stock_form");
       form_div.appendChild(form);
       
+      // This value is just to set a hidden value in the form so that the
+      // radio button value can be sent to Flask
       var digest_field = document.createElement("input");
       digest_field.setAttribute("id", "hidden_field");
       digest_field.setAttribute("name", "hidden_field");
@@ -30,9 +34,11 @@
       digest_field.setAttribute("value", getRadio())
       form.appendChild(digest_field);
 
+      // Create as many fields as the user indicates
       for (var i = 0; i < num; i++) {
+        // In each iteration create fields for the user to enter
+        // the ticker symbol and the quantity of stocks purchased
         var ticker_field = document.createElement("input");
-        // var price_field = document.createElement("input");
         var quant_field = document.createElement("input");
         var stk_div = document.createElement("div");
         stk_div.className = 'row';
@@ -44,11 +50,6 @@
         ticker_field.setAttribute("placeholder", "Ticker");
         stk_div.appendChild(ticker_field);
 
-        // price_field.setAttribute("type", "text");
-        // price_field.className = 'stocks';
-        // price_field.setAttribute("name", "price"+i);
-        // price_field.setAttribute("placeholder", "Price");
-
         quant_field.setAttribute("type", "text");
         quant_field.className = 'stocks';
         quant_field.setAttribute("name", "quant"+i);
@@ -56,6 +57,7 @@
         stk_div.appendChild(quant_field);
       }
       
+      // Create submit button for form
       var form_submit = document.createElement("input");
       form_submit.type = "submit";
       form_submit.name = "Submit";
@@ -70,7 +72,6 @@
   </head>
 
   <body>
-      <!-- <h1>Stock Portfolio Tracker</h1> -->
       <div>
         <h1>Stock Portfolio Tracker</h1>
         <button onclick="location.href='/dash';" style="margin-top: 10px;">Dashboard</button>

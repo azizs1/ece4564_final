@@ -157,7 +157,7 @@ def checkDigest():
 
                 # Add total gain/loss
                 stock_tmp = stocks
-                # for stock in stocks:
+                
                 total_value = 0
                 print(stock_tmp)
                 stocks = stock_coll.find_one({"user": userEmail})['stocks']
@@ -181,7 +181,6 @@ def checkDigest():
                 for i in stocks:
                     query = i[0]+" stock"
                     news = api.get_everything(q=query,sort_by="relevancy")['articles']
-                    # print(news)
                     contents.append([news[0]["title"], news[0]["url"]])
                     contents.append([news[1]["title"], news[1]["url"]])
 
@@ -257,9 +256,6 @@ def login_page(message):
     return render_template("login.html", message=message, form=form)
 
 
-new_acc = False
-
-
 @app.route('/create_acc', methods=['POST', 'GET'])
 def c_acc_redir():
     return redirect(url_for('create_acc_page', message=" "))
@@ -300,9 +296,7 @@ def create_acc_page(message):
             credentials.insert_one(new_info)
 
             # if submit is pressed and account does not exist,
-            # set new_acc to true which is set to false when dashboard is accessed
-            # Since the user doesn't exist, go through first time set up
-            new_acc = True
+            # return an error message
             return redirect(url_for('prefs_page'))
 
     return render_template("create_acc.html", message=message)
@@ -324,6 +318,7 @@ def prefs_page():
 
     if request.method == 'POST':
         stocks = []
+        # Take in items in the pref form to put into the db
         for i,(k,v) in enumerate(request.form.items()):
             if k != "Submit" and k != "hidden_field":
                 if i%2 == 1:
@@ -331,16 +326,15 @@ def prefs_page():
                 else:
                     stocks[len(stocks)-1].append(v)
         digest_pref = request.form['hidden_field']
-        print(digest_pref)
-        print(stocks)
 
-        # store in db here
+        # print(digest_pref)
+        # print(stocks)
+
         # If first time set up just add to database, otherwise need to update user preferences
         # Search for user in stock portfolios collection
         email = session["email"]
         userEmail = email
         user_found = stock_coll.find_one(({'user': email}))
-
 
         if user_found:
             # Update preferences
@@ -367,17 +361,16 @@ def prefs_page():
 
         stockTickers.clear()
         for stock in stock_coll.find_one({"user":email})['stocks']:
-
             # Create stock ticker
             stockTick = yfinance.Ticker(stock[0])
             stockTickers.append(stockTick)
         
-        print(stockTickers)
-        print(stock_coll.find_one({"user": session["email"]}))
+        # print(stockTickers)
+        # print(stock_coll.find_one({"user": session["email"]}))
+
         # Add price to stock in db
-        count = 0
         stock_tmp = stocks
-        # for stock in stocks:
+        
         total_value = 0
         print(stock_tmp)
         print(len(stocks))
@@ -394,8 +387,6 @@ def prefs_page():
                 stock_tmp[i].append(price)
                 print("sdf",stock_tmp[i][2],stock_tmp[i][1])
                 total_value += float(stock_tmp[i][2])*float(stock_tmp[i][1])
-
-            # count += 1
                 
         # Update db
         user_filter = {'user': userEmail}
@@ -413,8 +404,6 @@ def dash_redir():
 @app.route('/dash/<status>', methods=['GET'])
 def dash_page(status):
     # Can only be accessible if a user is in session
-    # global stockTickers
-    # stockTickers.clear()
     global LEDip
     global LEDport
     
@@ -428,12 +417,7 @@ def dash_page(status):
     if status == "refresh":
         stocks = stock_coll.find_one({"user": session["email"]})['stocks']
         stock_tmp = stocks
-        # for stock in stocks:
-        print(stock_tmp)
-        print(len(stocks))
-        print(len(stockTickers))
         for i in range(len(stocks)):
-            print(stocks[i])
             # Find price from ticker
             price = stockTickers[i].info['regularMarketPrice']
 
@@ -447,16 +431,17 @@ def dash_page(status):
 
         user_filter = {'user': userEmail}
         new_prefs = {"$set": {'initial_val': stock_coll.find_one({"user": session["email"]})['initial_val'], 'stocks': stock_tmp, 'digest': stock_coll.find_one({"user": session["email"]})['digest'] }}
-
+        # Update db page
         stock_coll.update_one(user_filter, new_prefs)
 
     if not session.get("email"):
         return redirect(url_for('login_page'))
-    print(stock_coll.find_one({"user": session["email"]}))
+
     stocks = stock_coll.find_one({"user": session["email"]})['stocks']
     initial_value = stock_coll.find_one({"user": session["email"]})['initial_val']
     articles = []
 
+    # Find 2 articles for every stock
     for i in stocks:
         query = i[0]+" stock"
         news = api.get_everything(q=query,sort_by="relevancy")['articles']
@@ -487,8 +472,6 @@ def dash_page(status):
     else:
         r = requests.post('http://'+ LEDip +':'+ str(LEDport) +'/LED?color='+ 'green')
     
-    #send_dummy()
-    
     return render_template("dashboard.html", stocks=stocks, i_val=initial_value, articles=articles)
 
 # This is the log out route, it ends the user's session
@@ -501,5 +484,4 @@ def logout():
 
 # Run the application when service is started
 if __name__ == '__main__':
-    #app.run(debug=True)
     app.run(host='0.0.0.0')
